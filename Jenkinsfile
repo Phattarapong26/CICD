@@ -7,7 +7,7 @@ pipeline {
         GIT_REPO = 'https://github.com/Phattarapong26/CICD.git'
         GIT_BRANCH = 'main'
         PATH = "/usr/local/bin:${env.PATH}"
-        APP_PORT = '3000'
+        APP_PORT = '5000'
     }
     
     stages {
