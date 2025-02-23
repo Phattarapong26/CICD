@@ -2,13 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'course-management'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKER_CREDENTIALS = credentials('docker-credentials')
-        DOCKER_REGISTRY = 'your-registry.com'
-        GIT_REPO = 'https://github.com/your-username/course-management.git'
+        GIT_REPO = 'https://github.com/Phattarapong26/CICD.git'
         GIT_BRANCH = 'main'
-        GIT_CREDENTIALS = credentials('git-credentials')
     }
 
     stages {
