@@ -8,6 +8,10 @@ pipeline {
         GIT_BRANCH = 'main'
     }
     
+    tools {
+        nodejs 'Node 20.x'
+    }
+    
     stages {
         stage('Git Clone') {
             steps {
@@ -20,17 +24,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm install'
-                }
+                sh 'npm install'
             }
         }
 
         stage('Build') {
             steps {
-                nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm run build'
-                }
+                sh 'npm run build'
             }
         }
 
