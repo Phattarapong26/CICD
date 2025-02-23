@@ -20,6 +20,6 @@ COPY nginx.conf /etc/nginx/conf.d/
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose both ports 80 and 3000
-EXPOSE 80 3000
+EXPOSE 80 5000
 
 CMD ["nginx", "-g", "daemon off;"]
