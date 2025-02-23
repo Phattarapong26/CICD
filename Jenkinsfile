@@ -6,10 +6,7 @@ pipeline {
         DOCKER_TAG = 'latest'
         GIT_REPO = 'https://github.com/Phattarapong26/CICD.git'
         GIT_BRANCH = 'main'
-    }
-    
-    tools {
-        nodejs 'Node 20.x'
+        PATH = "/usr/local/bin:${env.PATH}"
     }
     
     stages {
@@ -19,6 +16,15 @@ pipeline {
                 git branch: "${GIT_BRANCH}",
                     url: "${GIT_REPO}",
                     credentialsId: 'git-credentials'
+            }
+        }
+
+        stage('Check Node') {
+            steps {
+                sh '''
+                    node -v
+                    npm -v
+                '''
             }
         }
 
