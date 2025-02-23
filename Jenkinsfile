@@ -22,7 +22,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm install'
+                    sh '''
+                        echo "Node version: $(node -v)"
+                        echo "NPM version: $(npm -v)"
+                        npm install --legacy-peer-deps || {
+                            echo "Failed to install dependencies. Retrying with --force..."
+                            npm install --force
+                        }
+                    '''
                 }
             }
         }
@@ -30,7 +37,14 @@ pipeline {
         stage('Build') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm run build'
+                    sh '''
+                        export NODE_OPTIONS="--max-old-space-size=4096"
+                        npm run build || {
+                            echo "Build failed. Showing error log:"
+                            cat npm-debug.log || true
+                            exit 1
+                        }
+                    '''
                 }
             }
         }
@@ -38,9 +52,16 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh """
-                        docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} .
-                    """
+                    sh '''
+                        docker --version
+                        docker build . -f Dockerfile \
+                            -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} \
+                            --build-arg NODE_ENV=production \
+                            || {
+                                echo "Docker build failed. Showing docker build log:"
+                                exit 1
+                            }
+                    '''
                 }
             }
         }
