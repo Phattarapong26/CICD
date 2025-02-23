@@ -29,9 +29,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                // ใช้ Node.js version ที่ต้องการ
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm install'
+                    // เพิ่มการแสดง Node.js version และ npm version
+                    sh '''
+                        echo "Node version: $(node -v)"
+                        echo "NPM version: $(npm -v)"
+                        npm install --verbose
+                    '''
                 }
             }
         }
@@ -39,7 +43,14 @@ pipeline {
         stage('Type Check') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm run type-check'
+                    // เพิ่ม error handling
+                    sh '''
+                        npm run type-check || {
+                            echo "Type check failed. Showing detailed errors:"
+                            npm run type-check -- --pretty
+                            exit 1
+                        }
+                    '''
                 }
             }
         }
@@ -47,7 +58,14 @@ pipeline {
         stage('Lint') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm run lint'
+                    // เพิ่ม error handling และการแสดงผลแบบละเอียด
+                    sh '''
+                        npm run lint -- --format stylish || {
+                            echo "Linting failed. Showing detailed errors:"
+                            npm run lint -- --format stylish
+                            exit 1
+                        }
+                    '''
                 }
             }
         }
@@ -55,7 +73,15 @@ pipeline {
         stage('Build') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh 'npm run build'
+                    // เพิ่ม error handling และการแสดงผล build stats
+                    sh '''
+                        export NODE_OPTIONS="--max-old-space-size=4096"
+                        npm run build || {
+                            echo "Build failed. Checking build logs:"
+                            cat npm-debug.log || true
+                            exit 1
+                        }
+                    '''
                 }
             }
         }
@@ -151,6 +177,8 @@ pipeline {
 
     post {
         always {
+            // เพิ่มการเก็บ log files
+            archiveArtifacts artifacts: 'npm-debug.log,build/**/*', allowEmptyArchive: true
             // Cleanup
             sh 'docker logout ${DOCKER_REGISTRY}'
             cleanWs()
