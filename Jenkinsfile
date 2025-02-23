@@ -2,9 +2,8 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_REGISTRY = 'docker.io'
-        DOCKER_IMAGE = 'phattarapong26/cicd'
-        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKER_IMAGE = 'clients'
+        DOCKER_TAG = 'latest'
         GIT_REPO = 'https://github.com/Phattarapong26/CICD.git'
         GIT_BRANCH = 'main'
     }
@@ -22,14 +21,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh '''
-                        echo "Node version: $(node -v)"
-                        echo "NPM version: $(npm -v)"
-                        npm install --legacy-peer-deps || {
-                            echo "Failed to install dependencies. Retrying with --force..."
-                            npm install --force
-                        }
-                    '''
+                    sh 'npm install'
                 }
             }
         }
@@ -37,14 +29,7 @@ pipeline {
         stage('Build') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    sh '''
-                        export NODE_OPTIONS="--max-old-space-size=4096"
-                        npm run build || {
-                            echo "Build failed. Showing error log:"
-                            cat npm-debug.log || true
-                            exit 1
-                        }
-                    '''
+                    sh 'npm run build'
                 }
             }
         }
@@ -52,16 +37,10 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh '''
-                        docker --version
-                        docker build . -f Dockerfile \
-                            -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} \
-                            --build-arg NODE_ENV=production \
-                            || {
-                                echo "Docker build failed. Showing docker build log:"
-                                exit 1
-                            }
-                    '''
+                    sh """
+                        docker build --pull --rm -f 'Dockerfile' \
+                            -t '${DOCKER_IMAGE}:${DOCKER_TAG}' .
+                    """
                 }
             }
         }
