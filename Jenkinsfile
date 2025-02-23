@@ -33,12 +33,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    // เพิ่มการแสดง Node.js version และ npm version
-                    sh '''
-                        echo "Node version: $(node -v)"
-                        echo "NPM version: $(npm -v)"
-                        npm install --verbose
-                    '''
+                    sh 'npm ci'  // ใช้ npm ci แทน npm install เพื่อความเสถียร
                 }
             }
         }
@@ -76,15 +71,7 @@ pipeline {
         stage('Build') {
             steps {
                 nodejs(nodeJSInstallationName: 'Node 20.x') {
-                    // เพิ่ม error handling และการแสดงผล build stats
-                    sh '''
-                        export NODE_OPTIONS="--max-old-space-size=4096"
-                        npm run build || {
-                            echo "Build failed. Checking build logs:"
-                            cat npm-debug.log || true
-                            exit 1
-                        }
-                    '''
+                    sh 'npm run build'
                 }
             }
         }
