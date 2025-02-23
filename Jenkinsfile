@@ -1,12 +1,14 @@
 pipeline {
     agent any
-
+    
     environment {
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_IMAGE = 'phattarapong26/cicd'
         DOCKER_TAG = "${BUILD_NUMBER}"
         GIT_REPO = 'https://github.com/Phattarapong26/CICD.git'
         GIT_BRANCH = 'main'
     }
-
+    
     stages {
         stage('Git Clone') {
             steps {
@@ -14,16 +16,17 @@ pipeline {
                 cleanWs()
                 
                 // Clone with credentials
-                git credentialsId: 'git-credentials',
+                git branch: "${GIT_BRANCH}",
                     url: "${GIT_REPO}",
-                    branch: "${GIT_BRANCH}"
+                    credentialsId: 'git-credentials'
                 
-                // แสดงข้อมูล Git commit ล่าสุด
-                sh """
-                    echo "Git commit information:"
-                    git log -1
+                // แสดงข้อมูล Git commit และ branch
+                sh '''
+                    echo "Repository: ${GIT_REPO}"
                     echo "Branch: ${GIT_BRANCH}"
-                """
+                    echo "Git commit information:"
+                    git log -1 --pretty=format:"%h - %an, %ar : %s"
+                '''
             }
         }
 
