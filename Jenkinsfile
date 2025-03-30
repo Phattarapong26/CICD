@@ -8,6 +8,7 @@ pipeline {
         GIT_BRANCH = 'main'
         PATH = "/usr/local/bin:${env.PATH}"
         APP_PORT = '5000'
+        ROBOT_REPORTS_DIR = 'robot-reports'
     }
     
     stages {
@@ -31,7 +32,10 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                    npm install
+                    python3 -m pip install robotframework robotframework-seleniumlibrary
+                '''
             }
         }
 
@@ -65,8 +69,19 @@ pipeline {
                             --restart unless-stopped \
                             ${DOCKER_IMAGE}:${DOCKER_TAG}
                             
-                        echo "Application is running on port ${APP_PORT}"
-                        echo "You can access it at http://localhost:${APP_PORT}"
+                        echo "แอปพลิเคชันกำลังทำงานที่พอร์ต ${APP_PORT}"
+                        echo "คุณสามารถเข้าถึงได้ที่ http://localhost:${APP_PORT}"
+                    """
+                }
+            }
+        }
+
+        stage('Run Robot Tests') {
+            steps {
+                script {
+                    sh """
+                        mkdir -p ${ROBOT_REPORTS_DIR}
+                        python3 -m robot --outputdir ${ROBOT_REPORTS_DIR} TestCase.robot
                     """
                 }
             }
@@ -75,10 +90,11 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline succeeded! Application is running at http://localhost:${APP_PORT}"
+            echo "Pipeline สำเร็จ! แอปพลิเคชันกำลังทำงานที่ http://localhost:${APP_PORT}"
+            echo "รายงานการทดสอบ Robot Framework อยู่ในโฟลเดอร์ ${ROBOT_REPORTS_DIR}"
         }
         failure {
-            echo "Pipeline failed! Check the logs for details"
+            echo "Pipeline ล้มเหลว! กรุณาตรวจสอบบันทึกเพื่อดูรายละเอียด"
         }
         always {
             cleanWs()
