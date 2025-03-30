@@ -9,6 +9,7 @@ pipeline {
         PATH = "/usr/local/bin:${env.PATH}"
         APP_PORT = '5000'
         ROBOT_REPORTS_DIR = 'robot-reports'
+        VENV_PATH = 'robot-venv'
     }
     
     stages {
@@ -34,6 +35,8 @@ pipeline {
             steps {
                 sh '''
                     npm install
+                    python3 -m venv ${VENV_PATH}
+                    source ${VENV_PATH}/bin/activate
                     python3 -m pip install robotframework robotframework-seleniumlibrary
                 '''
             }
@@ -80,6 +83,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                        source ${VENV_PATH}/bin/activate
                         mkdir -p ${ROBOT_REPORTS_DIR}
                         python3 -m robot --outputdir ${ROBOT_REPORTS_DIR} TestCase.robot
                     """
